@@ -164,7 +164,11 @@ export default function Home() {
 
       <main className="flex-1 container py-6">
         <div className="mb-6">
-          <BannerWithIcon onViewDemo={handleViewDemo} />
+          <BannerWithIcon
+            title={siteConfig.name}
+            subtitle={siteConfig.subtitle}
+            onViewDemo={handleViewDemo}
+          />
         </div>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4 bg-secondary border border-border p-1 rounded-lg">

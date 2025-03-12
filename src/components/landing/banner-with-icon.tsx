@@ -9,9 +9,11 @@ import { cn } from "@/lib/utils"
 
 interface BannerWithIconProps {
     onViewDemo?: () => void;
+    title?: string;
+    subtitle?: string;
 }
 
-function BannerWithIcon({ onViewDemo }: BannerWithIconProps) {
+function BannerWithIcon({ onViewDemo, title = "Instagram Snitch'r", subtitle = "Find out who unfollowed you and analyze your Instagram follower data" }: BannerWithIconProps) {
     const [isVisible, setIsVisible] = useState(true)
     const STORAGE_KEY = "banner-dismissed"
 
@@ -68,9 +70,9 @@ function BannerWithIcon({ onViewDemo }: BannerWithIconProps) {
                                 </div>
                                 <div className="flex grow flex-col justify-between gap-3 md:flex-row md:items-center">
                                     <div className="space-y-0.5">
-                                        <p className="text-sm font-medium text-foreground transition-colors duration-300">Try our interactive demo</p>
+                                        <p className="text-sm font-medium text-foreground transition-colors duration-300">{title}</p>
                                         <p className="text-sm text-muted-foreground transition-colors duration-300">
-                                            Explore sample data that showcases the full capabilities of our tool.
+                                            {subtitle}
                                         </p>
                                     </div>
                                     <div className="flex gap-2 max-md:flex-wrap">
