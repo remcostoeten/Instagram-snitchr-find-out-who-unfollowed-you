@@ -11,9 +11,6 @@ const nextConfig = {
   },
   distDir: '.next',
   dir: './src',
-  publicRuntimeConfig: {
-    publicDir: 'src/public',
-  },
   outputFileTracing: true,
 }
 
