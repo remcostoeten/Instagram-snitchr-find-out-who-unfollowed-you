@@ -1,118 +1,152 @@
-# Instagram CSV Comparer
+# Instagram Snitch'r
 
-A powerful Next.js application for comparing and analyzing CSV files, particularly useful for Instagram follower data analysis.
+A modern web application that helps you track who unfollowed you on Instagram. Compare your follower lists over time, identify unfollowers, and analyze your Instagram follower data with style.
 
-## 🚀 Features
+![Next.js](https://img.shields.io/badge/Next.js-13-black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
+![Tailwind](https://img.shields.io/badge/Tailwind-3.0-38bdf8)
+![Framer Motion](https://img.shields.io/badge/Framer-Motion-ff69b4)
+![Zustand](https://img.shields.io/badge/Zustand-4.4-orange)
 
-- **CSV File Upload**: Easily upload and manage multiple CSV files
-- **Advanced Comparison**: Compare two CSV files to find differences, similarities, and changes
-- **Data Visualization**: Analyze your data with intuitive visualizations
-- **File Management**: Organize files into folders and apply labels for better organization
-- **Export Results**: Export comparison results to new CSV files
-- **Demo Mode**: Try the tool with sample data before uploading your own files
+## 🌟 Features
 
-## 📋 Prerequisites
+- 🕵️ Track who unfollowed you on Instagram
+- 📊 Compare follower lists over time
+- 🔄 Identify new followers and unfollowers
+- 📈 Analyze follower data with detailed insights
+- 🎨 Beautiful, responsive UI with dark/light mode
+- ⚡ Fast and efficient data processing
+- 🔒 All processing done client-side for privacy
+- 💾 Client-side data persistence with Zustand
+- 👤 User authentication and personalized spaces
 
-- Node.js 18.0 or later
-- pnpm or bun package manager (recommended)
+## 🚀 Getting Started
 
-## 🛠️ Installation
+### Prerequisites
 
-1. Clone the repository
-   ```bash
-   git clone https://github.com/yourusername/instagram-csv-comparer.git
-   cd instagram-csv-comparer
-   ```
+- Node.js 18+ 
+- pnpm (recommended) or npm
 
-2. Install dependencies
-   ```bash
-   pnpm install
-   # or
-   bun install
-   ```
+### Installation
 
-3. Create a `.env.local` file with the following content:
-   ```
-   NEXT_PUBLIC_APP_URL=http://localhost:3000
-   DEMO_ACCESS_PASSWORD=your-chosen-password
-   ```
-
-4. Start the development server
-   ```bash
-   pnpm dev
-   # or
-   bun dev
-   ```
-
-5. Open [http://localhost:3000](http://localhost:3000) in your browser
-
-## 🏗️ Project Structure
-
-The project follows a modular architecture with clear separation of concerns, with all code organized within the `src` directory:
-
-```
-instagram-csv-comparer/
-├── src/                     # All application code
-│   ├── app/                 # Next.js app router pages
-│   ├── components/          # UI components
-│   │   └── ui/              # Shared UI components
-│   ├── hooks/               # Custom React hooks
-│   ├── lib/                 # Utility libraries
-│   ├── modules/             # Feature modules
-│   │   ├── authentication/  # Authentication module
-│   │   └── ig-csv/          # Instagram CSV module
-│   │       ├── api/         # API queries and mutations
-│   │       │   ├── mutations/
-│   │       │   └── queries/
-│   │       ├── models/      # Data models and schemas
-│   │       └── store/       # State management with Zustand
-│   ├── public/              # Public assets and demo data
-│   ├── styles/              # Global styles
-│   ├── types/               # TypeScript type definitions
-│   └── utils/               # Utility functions
-├── .env.local               # Environment variables
-├── next.config.mjs          # Next.js configuration
-├── package.json             # Project dependencies
-├── tailwind.config.js       # Tailwind CSS configuration
-└── tsconfig.json            # TypeScript configuration
+1. Clone the repository:
+```bash
+git clone https://github.com/remcostoeten/Instagram-snitchr-find-out-who-unfollowed-you.git
+cd Instagram-snitchr-find-out-who-unfollowed-you
 ```
 
-## 💻 Usage
+2. Install dependencies:
+```bash
+pnpm install
+# or
+npm install
+```
 
-1. **Upload CSV Files**: Drag and drop your CSV files or use the file browser
-2. **Select Files to Compare**: Choose two files from your uploaded files
-3. **View Comparison Results**: See entries that exist only in file 1, only in file 2, in both files, or have differences
-4. **Export Results**: Export specific comparison results to new CSV files
-5. **Organize Files**: Create folders and labels to organize your files
+3. Run the development server:
+```bash
+pnpm dev
+# or
+npm run dev
+```
 
-## 📊 Demo Data
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-The application includes demo CSV files to help you get started:
+## 📝 Important Notice: Data Generation
 
-- `demo-users-1.csv`: Basic user data sample
-- `demo-users-2.csv`: Extended user data sample with additional fields
-- `demo-instagram-followers.csv`: Sample Instagram follower data
+Currently, the application requires manually generated CSV files of your Instagram followers/following lists. 
 
-## 🔒 Authentication
+### Current Method
+We currently use the [Instagram Followers Exporter](https://chromewebstore.google.com/detail/instagram-volgers-exporte/ehbjlcniiagahknoclpikfjgnnggkoac) Chrome extension to generate the CSV files. After generating the files, you can upload them to Snitch'r for comparison.
 
-The demo mode is protected with a simple password. Use the password provided in your `.env.local` file to access the demo features.
+### 🔄 Automation Plans
+We are actively working on automating the data collection process. The planned automation will include:
 
-## 🔧 Technologies Used
+- Backend service (Python or TypeScript) to periodically fetch Instagram data
+- Automated data collection on a CRON schedule
+- Direct integration with Instagram's API (where possible)
+- Secure storage of historical data for trend analysis
 
-- **Next.js**: React framework with App Router
-- **TypeScript**: Type-safe JavaScript
-- **Tailwind CSS**: Utility-first CSS framework
-- **Shadcn UI**: Accessible UI components built with Radix UI
-- **Zustand**: State management
-- **Zod**: Schema validation
-- **Papa Parse**: CSV parsing
-- **Recharts**: Data visualization
-- **Jose**: JWT handling
+This automation will eliminate the need for manual data collection and provide more consistent tracking.
 
-## 📄 License
+## 🛠️ Tech Stack
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+### Current Implementation
+- **Framework:** Next.js 13+ with App Router
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS
+- **Components:** Shadcn/ui
+- **Animations:** Framer Motion
+- **State & Storage:** 
+  - Zustand for client-side state management
+  - Local storage persistence for user data
+- **Form Validation:** Zod
+- **Authentication:** Custom JWT implementation with jose
+
+### 🗺️ Roadmap
+
+#### Phase 1: Enhanced Data Storage
+- Implementation of Drizzle ORM with SQLite
+- Data encryption using bcryptjs
+- Secure storage of user preferences and historical data
+- Automated backup system
+
+#### Phase 2: Advanced Features
+- Real-time unfollower notifications
+- Advanced analytics dashboard
+- Export customization options
+
+#### Phase 3: Security & Performance
+- End-to-end encryption for sensitive data
+- Rate limiting and request caching
+- Performance optimizations for large datasets
+- Advanced user roles and permissions
+
+## 📁 Project Structure
+
+```
+src/
+├── app/                   # Next.js app router pages
+├── components/           # React components
+├── core/                # Core configuration
+├── hooks/               # Custom React hooks
+├── modules/             # Feature modules
+│   ├── auth/           # Authentication module
+│   └── ig-csv/         # Instagram data handling
+├── shared/             # Shared utilities
+└── types/              # TypeScript types
+```
+
+## 🔐 Data Storage
+
+### Current Implementation
+- Client-side state management using Zustand
+- Persistent storage using localStorage
+- Secure handling of sensitive data
+- Data structure optimized for quick comparisons
+
+### Future Implementation (In Progress)
+- **Database:** SQLite with Drizzle ORM
+- **Encryption:** bcryptjs for sensitive data
+- **Storage:**
+  - User preferences
+  - Historical follower data
+  - Comparison results
+  - Analytics data
 
 ## 🤝 Contributing
 
-Contributions are welcome! Feel free to submit issues or pull requests. 
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🔗 Links
+
+- [GitHub Repository](https://github.com/remcostoeten/Instagram-snitchr-find-out-who-unfollowed-you)
+- [Issue Tracker](https://github.com/remcostoeten/Instagram-snitchr-find-out-who-unfollowed-you/issues)
+
+## ✨ Acknowledgments
+
+- [Instagram Followers Exporter](https://chromewebstore.google.com/detail/instagram-volgers-exporte/ehbjlcniiagahknoclpikfjgnnggkoac) for current data generation
+- All contributors and users of this project 
