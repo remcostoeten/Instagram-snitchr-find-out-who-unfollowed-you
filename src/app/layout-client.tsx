@@ -8,16 +8,27 @@ const inter = Inter({ subsets: ["latin"] })
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
     return (
-        <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
-            <body className={`${inter.className} antialiased`}>
+        <body className={`${inter.className} antialiased min-h-screen bg-background font-sans`}>
+            <ThemeProvider
+                attribute="class"
+                defaultTheme="dark"
+                enableSystem
+                disableTransitionOnChange={false}
+            >
                 <style jsx global>{`
+          :root {
+            --transition-duration: 0.3s;
+          }
           * {
-            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+            transition: background-color var(--transition-duration) ease,
+                      border-color var(--transition-duration) ease,
+                      color var(--transition-duration) ease,
+                      opacity var(--transition-duration) ease;
           }
         `}</style>
                 <SonnerProvider />
                 {children}
-            </body>
-        </ThemeProvider>
+            </ThemeProvider>
+        </body>
     )
 } 
