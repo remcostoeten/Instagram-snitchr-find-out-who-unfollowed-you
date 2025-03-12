@@ -1,5 +1,6 @@
 import { useCSVStore } from "../../store/store"
 import type { CSVFile } from "../../models/schema"
+import { toast } from "sonner"
 
 export function createFile(file: Omit<CSVFile, "id" | "createdAt" | "updatedAt">): string {
   return useCSVStore.getState().addFile(file)
@@ -47,5 +48,22 @@ export function useAddLabelToFile() {
 
 export function useRemoveLabelFromFile() {
   return useCSVStore((state) => state.removeLabelFromFile)
+}
+
+export function useRenameFile() {
+  const updateFile = useCSVStore((state) => state.updateFile)
+
+  return (fileId: string, newName: string) => {
+    try {
+      updateFile(fileId, { name: newName })
+      toast.success("File renamed", {
+        description: `File has been renamed to "${newName}"`
+      })
+    } catch (error) {
+      toast.error("Failed to rename file", {
+        description: error instanceof Error ? error.message : "An unknown error occurred"
+      })
+    }
+  }
 }
 

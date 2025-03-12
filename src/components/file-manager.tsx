@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { Diff, FileSearch, X, FolderOpen, Tag, Calendar, MoreHorizontal } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import { Diff, FileSearch, X, FolderOpen, Tag, Calendar, MoreHorizontal, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { AlertCircle } from "lucide-react"
@@ -12,7 +12,17 @@ import { useGetLabels } from "@/modules/ig-csv/api/queries/labels"
 import { useMoveFileToFolder } from "@/modules/ig-csv/api/mutations/files"
 import { useAddLabelToFile, useRemoveLabelFromFile } from "@/modules/ig-csv/api/mutations/files"
 import type { FileData } from "@/types"
-import { useGetFiles } from "@/modules/ig-csv/api/queries/files" // Import useGetFiles
+import { useGetFiles } from "@/modules/ig-csv/api/queries/files"
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
+import { Card } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { format } from "date-fns"
+import { toast } from "sonner"
+import { DocumentTitle } from "./document-title"
+import { useRenameFile } from "@/modules/ig-csv/api/mutations/files"
 
 interface FileManagerProps {
   files: FileData[]
@@ -41,12 +51,16 @@ export default function FileManager({
   const [fileForLabelManagement, setFileForLabelManagement] = useState<string | null>(null)
   const [isMoveFolderDialogOpen, setIsMoveFolderDialogOpen] = useState(false)
   const [isManageLabelsDialogOpen, setIsManageLabelsDialogOpen] = useState(false)
+  const [highlightCompareButton, setHighlightCompareButton] = useState(false)
+
+  const compareButtonRef = useRef<HTMLButtonElement>(null)
 
   const folders = useGetFolders()
   const labels = useGetLabels()
   const moveFileToFolder = useMoveFileToFolder()
   const addLabelToFile = useAddLabelToFile()
   const removeLabelFromFile = useRemoveLabelFromFile()
+  const renameFile = useRenameFile()
 
   // Get the actual file objects from the store to access metadata
   const storeFiles = useGetFiles()
@@ -72,6 +86,18 @@ export default function FileManager({
   const handleMoveToFolder = (folderId: string | null) => {
     if (fileForFolderMove) {
       moveFileToFolder(fileForFolderMove, folderId)
+
+      // Get file and folder names for the toast
+      const fileName = storeFiles.find(f => f.id === fileForFolderMove)?.name || "File"
+      const folderName = folderId
+        ? folders.find(f => f.id === folderId)?.name || "folder"
+        : "All Files"
+
+      // Show toast notification
+      toast.success("File moved", {
+        description: `"${fileName}" has been moved to "${folderName}"`
+      })
+
       setFileForFolderMove(null)
       setIsMoveFolderDialogOpen(false)
     }
@@ -83,12 +109,54 @@ export default function FileManager({
     const storeFile = storeFiles.find((f) => f.id === fileForLabelManagement)
     if (!storeFile) return
 
+    const fileName = storeFile.name || "File"
+    const labelName = labels.find(l => l.id === labelId)?.name || "label"
+
     if (storeFile.labels.includes(labelId)) {
       removeLabelFromFile(fileForLabelManagement, labelId)
+      toast.info("Label removed", {
+        description: `"${labelName}" has been removed from "${fileName}"`
+      })
     } else {
       addLabelToFile(fileForLabelManagement, labelId)
+      toast.success("Label added", {
+        description: `"${labelName}" has been added to "${fileName}"`
+      })
     }
   }
+
+  // Handle demo data loaded event
+  useEffect(() => {
+    const handleDemoDataLoaded = (event: CustomEvent) => {
+      // Check if we should highlight the compare button
+      const shouldHighlight = event.detail?.highlightCompare === true;
+
+      if (shouldHighlight && files.length >= 2) {
+        console.log("Highlighting compare button after demo files loaded");
+
+        // Set the highlight state for the animation
+        setHighlightCompareButton(true);
+
+        // After 5 seconds, remove the highlight effect
+        setTimeout(() => {
+          setHighlightCompareButton(false);
+        }, 5000);
+
+        // Optional: Scroll to the compare button to make sure it's visible
+        if (compareButtonRef.current) {
+          compareButtonRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+    };
+
+    // Add event listener for demo data loaded
+    window.addEventListener('demoDataLoaded', handleDemoDataLoaded as EventListener);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('demoDataLoaded', handleDemoDataLoaded as EventListener);
+    };
+  }, [files.length]);
 
   if (files.length === 0) {
     return (
@@ -109,157 +177,250 @@ export default function FileManager({
       </div>
 
       <div className="space-y-4">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
           <h2 className="text-xl font-semibold">
             {selectedFolderId
-              ? `Files in "${folders.find((f) => f.id === selectedFolderId)?.name}"`
+              ? `Folder: ${folders.find(f => f.id === selectedFolderId)?.name}`
               : selectedLabelId
-                ? `Files with label "${labels.find((l) => l.id === selectedLabelId)?.name}"`
+                ? `Label: ${labels.find(l => l.id === selectedLabelId)?.name}`
                 : "All Files"}
-            ({filteredFiles.length})
+            <span className="text-muted-foreground ml-2 text-sm">({filteredFiles.length})</span>
           </h2>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center space-x-2">
-              <Label htmlFor="comparison-field">Compare by:</Label>
-              <select
-                id="comparison-field"
-                value={comparisonField}
-                onChange={(e) => onComparisonFieldChange(e.target.value)}
-                className="p-2 rounded bg-background border"
+
+          <div className="flex flex-wrap items-center gap-2">
+            {(selectedFolderId || selectedLabelId) && (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <span className="mr-2">Filters:</span>
+                  {selectedFolderId && (
+                    <Badge variant="outline" className="flex items-center gap-1 mr-2">
+                      <FolderOpen className="h-3 w-3 mr-1" />
+                      {folders.find(f => f.id === selectedFolderId)?.name}
+                    </Badge>
+                  )}
+                  {selectedLabelId && (
+                    <Badge
+                      className="flex items-center gap-1"
+                      style={{
+                        backgroundColor: labels.find(l => l.id === selectedLabelId)?.color + "20",
+                        color: labels.find(l => l.id === selectedLabelId)?.color,
+                        borderColor: labels.find(l => l.id === selectedLabelId)?.color + "50"
+                      }}
+                    >
+                      <Tag className="h-3 w-3 mr-1" />
+                      {labels.find(l => l.id === selectedLabelId)?.name}
+                    </Badge>
+                  )}
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-xs flex items-center"
+                  onClick={() => {
+                    setSelectedFolderId(null);
+                    setSelectedLabelId(null);
+                  }}
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Clear
+                </Button>
+              </div>
+            )}
+
+            <div className="flex items-center ml-auto gap-2">
+              <div className="flex items-center space-x-2">
+                <Label htmlFor="comparison-field" className="text-sm whitespace-nowrap">Compare by:</Label>
+                <select
+                  id="comparison-field"
+                  value={comparisonField}
+                  onChange={(e) => onComparisonFieldChange(e.target.value)}
+                  className="p-1 text-sm rounded bg-background border"
+                >
+                  <option value="userId">User ID</option>
+                  <option value="username">Username</option>
+                </select>
+              </div>
+              <Button
+                ref={compareButtonRef}
+                onClick={() => {
+                  console.log("Compare button clicked with selected files:", selectedFiles)
+                  if (selectedFiles.length !== 2) {
+                    toast.error("Selection required", {
+                      description: "Please select exactly two files to compare"
+                    });
+                    return
+                  }
+                  onCompare();
+                  toast.success("Comparison started", {
+                    description: "Comparing the selected files..."
+                  });
+                }}
+                disabled={selectedFiles.length !== 2}
+                size="sm"
+                className={`transition-all ${highlightCompareButton ?
+                  'animate-pulse shadow-lg shadow-primary/30 ring-2 ring-primary ring-offset-1 scale-110' :
+                  ''
+                  }`}
               >
-                <option value="userId">User ID</option>
-                <option value="username">Username</option>
-              </select>
+                <Diff className="h-4 w-4 mr-2" />
+                Compare ({selectedFiles.length}/2)
+              </Button>
             </div>
-            <Button
-              onClick={() => {
-                console.log("Compare button clicked with selected files:", selectedFiles)
-                if (selectedFiles.length !== 2) {
-                  alert("Please select exactly two files to compare")
-                  return
-                }
-                onCompare()
-              }}
-              disabled={selectedFiles.length !== 2}
-            >
-              <Diff className="h-4 w-4 mr-2" />
-              Compare Selected Files
-            </Button>
           </div>
         </div>
 
-        <div className="grid gap-4">
-          {filteredFiles.map((file) => {
-            const storeFile = storeFiles.find((sf) => sf.id === file.id)
-            const fileFolder = storeFile?.folderId ? folders.find((f) => f.id === storeFile.folderId) : null
-            const fileLabels =
-              storeFile?.labels.map((labelId) => labels.find((l) => l.id === labelId)).filter(Boolean) || []
+        {filteredFiles.length === 0 ? (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>No files found</AlertTitle>
+            <AlertDescription>
+              {selectedFolderId || selectedLabelId ?
+                "No files match your current filters. Try adjusting your folder or label selection." :
+                "You haven't uploaded any files yet."}
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredFiles.map((file) => {
+              const storeFile = storeFiles.find((sf) => sf.id === file.id)
+              const fileFolder = storeFile?.folderId ? folders.find((f) => f.id === storeFile.folderId) : null
+              const fileLabels =
+                storeFile?.labels.map((labelId) => labels.find((l) => l.id === labelId)).filter(Boolean) || []
 
-            return (
-              <Card key={file.id} className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id={`select-${file.id}`}
-                      checked={selectedFiles.includes(file.id)}
-                      onCheckedChange={() => {
-                        console.log("Toggling file selection:", file.id)
-                        onToggleSelection(file.id)
-                      }}
-                    />
-                    <Label htmlFor={`select-${file.id}`} className="font-medium">
-                      {file.name}
-                    </Label>
+              return (
+                <Card key={file.id} className="p-4 space-y-3">
+                  {/* Header section with checkbox, title, and actions */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Checkbox
+                        id={`select-${file.id}`}
+                        checked={selectedFiles.includes(file.id)}
+                        onCheckedChange={() => {
+                          console.log("Toggling file selection:", file.id)
+                          onToggleSelection(file.id)
+                        }}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <DocumentTitle
+                          initialTitle={file.name}
+                          onTitleChange={(newName) => renameFile(file.id, newName)}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 ml-2">
+                      <Button variant="outline" size="sm" onClick={() => onViewFile(file.id)}>
+                        <FileSearch className="h-4 w-4 mr-1" />
+                        Analyze
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setFileForFolderMove(file.id)
+                              setIsMoveFolderDialogOpen(true)
+                            }}
+                          >
+                            <FolderOpen className="h-4 w-4 mr-2" />
+                            Move to folder
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setFileForLabelManagement(file.id)
+                              setIsManageLabelsDialogOpen(true)
+                            }}
+                          >
+                            <Tag className="h-4 w-4 mr-2" />
+                            Manage labels
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => {
+                              const fileName = file.name || "File";
+                              onRemoveFile(file.id);
+                              toast.success("File removed", {
+                                description: `"${fileName}" has been removed`
+                              });
+                            }}
+                          >
+                            <X className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">{file.data.length} rows</Badge>
-                    <Button variant="outline" size="sm" onClick={() => onViewFile(file.id)}>
-                      <FileSearch className="h-4 w-4 mr-1" />
-                      Analyze
-                    </Button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setFileForFolderMove(file.id)
-                            setIsMoveFolderDialogOpen(true)
-                          }}
-                        >
-                          <FolderOpen className="h-4 w-4 mr-2" />
-                          Move to folder
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setFileForLabelManagement(file.id)
-                            setIsManageLabelsDialogOpen(true)
-                          }}
-                        >
-                          <Tag className="h-4 w-4 mr-2" />
-                          Manage labels
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => onRemoveFile(file.id)}>
-                          <X className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
 
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {fileFolder && (
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                      <FolderOpen className="h-3 w-3" />
-                      {fileFolder.name}
-                    </Badge>
-                  )}
-
-                  {fileLabels.map(
-                    (label) =>
-                      label && (
-                        <Badge
-                          key={label.id}
-                          variant="outline"
-                          className="flex items-center gap-1"
-                          style={{
-                            backgroundColor: label.color ? `${label.color}20` : undefined,
-                            borderColor: label.color || undefined,
-                          }}
-                        >
-                          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: label.color || "#3b82f6" }} />
-                          {label.name}
+                  {/* File metadata section */}
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="flex items-center gap-1">
+                        <FileText className="h-3 w-3" />
+                        {file.data.length} rows
+                      </Badge>
+                      {storeFile && (
+                        <Badge variant="outline" className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {format(new Date(storeFile.createdAt), "MMM d, yyyy")}
                         </Badge>
-                      ),
-                  )}
+                      )}
+                    </div>
 
-                  {storeFile && (
-                    <Badge variant="outline" className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      {format(new Date(storeFile.createdAt), "MMM d, yyyy")}
-                    </Badge>
-                  )}
-                </div>
+                    {/* Folder and labels */}
+                    <div className="flex flex-wrap gap-2">
+                      {fileFolder && (
+                        <Badge variant="secondary" className="flex items-center gap-1">
+                          <FolderOpen className="h-3 w-3" />
+                          {fileFolder.name}
+                        </Badge>
+                      )}
 
-                <div className="text-sm text-muted-foreground">
-                  <span>Columns: </span>
-                  {file.columns.slice(0, 3).map((col, i) => (
-                    <Badge key={i} variant="secondary" className="mr-1">
-                      {col}
-                    </Badge>
-                  ))}
-                  {file.columns.length > 3 && <Badge variant="secondary">+{file.columns.length - 3} more</Badge>}
-                </div>
-              </Card>
-            )
-          })}
-        </div>
+                      {fileLabels.map(
+                        (label) =>
+                          label && (
+                            <Badge
+                              key={label.id}
+                              variant="outline"
+                              className="flex items-center gap-1"
+                              style={{
+                                backgroundColor: label.color ? `${label.color}20` : undefined,
+                                borderColor: label.color || undefined,
+                              }}
+                            >
+                              <div className="h-2 w-2 rounded-full" style={{ backgroundColor: label.color || "#3b82f6" }} />
+                              {label.name}
+                            </Badge>
+                          ),
+                      )}
+                    </div>
+
+                    {/* Columns preview */}
+                    <div className="text-sm text-muted-foreground flex flex-wrap gap-2 items-center">
+                      <span>Columns:</span>
+                      <div className="flex flex-wrap gap-1">
+                        {file.columns.slice(0, 3).map((col, i) => (
+                          <Badge key={i} variant="secondary" className="text-xs">
+                            {col}
+                          </Badge>
+                        ))}
+                        {file.columns.length > 3 && (
+                          <Badge variant="secondary" className="text-xs">
+                            +{file.columns.length - 3} more
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              )
+            })}
+          </div>
+        )}
 
         {selectedFiles.length !== 2 && (
           <Alert>
