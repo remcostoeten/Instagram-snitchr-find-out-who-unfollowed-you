@@ -1,5 +1,4 @@
 import { MetadataRoute } from 'next'
-import { siteConfig } from '@/core/config/site-config'
 
 export default function sitemap(): MetadataRoute.Sitemap {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://instagram-snitchr.vercel.app'

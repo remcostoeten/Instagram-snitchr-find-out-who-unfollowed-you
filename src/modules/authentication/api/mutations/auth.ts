@@ -20,12 +20,12 @@ export async function register(formData: FormData) {
     return { success: false, error: "Invalid request" }
   }
 
-  // Parse and validate input
   const rawInput = {
     email: formData.get("email"),
     password: formData.get("password"),
     confirmPassword: formData.get("confirmPassword"),
     name: formData.get("name"),
+    instagramHandle: formData.get("instagramHandle"),
   }
 
   try {
@@ -41,7 +41,7 @@ export async function register(formData: FormData) {
     const hashedPassword = await hashPassword(input.password)
 
     // Create user
-    const user = await createUser(input.email, hashedPassword, input.name)
+    const user = await createUser(input.email, hashedPassword, input.name, input.instagramHandle)
 
     // Create session
     const session = await createSession(user.id)
@@ -51,6 +51,7 @@ export async function register(formData: FormData) {
       sub: user.id,
       email: user.email,
       name: user.name,
+      instagramHandle: user.instagramHandle,
       sessionId: session.id,
     })
 
@@ -99,7 +100,7 @@ export async function login(formData: FormData) {
     const input = loginInputSchema.parse(rawInput)
 
     // Get client IP for rate limiting
-    const headersList = headers()
+    const headersList = await headers()
     const ip = headersList.get("x-forwarded-for") || "unknown"
 
     // Apply rate limiting for login attempts
@@ -133,6 +134,7 @@ export async function login(formData: FormData) {
       sub: user.id,
       email: user.email,
       name: user.name,
+      instagramHandle: user.instagramHandle,
       sessionId: session.id,
     })
 

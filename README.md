@@ -2,7 +2,7 @@
 
 A modern web application that helps you track who unfollowed you on Instagram. Compare your follower lists over time, identify unfollowers, and analyze your Instagram follower data with style.
 
-![Next.js](https://img.shields.io/badge/Next.js-13-black)
+![Next.js](https://img.shields.io/badge/Next.js-15-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
 ![Tailwind](https://img.shields.io/badge/Tailwind-3.0-38bdf8)
 ![Framer Motion](https://img.shields.io/badge/Framer-Motion-ff69b4)
@@ -11,7 +11,7 @@ A modern web application that helps you track who unfollowed you on Instagram. C
 ## 🌟 Features
 
 - 🕵️ Track who unfollowed you on Instagram
-- 📊 Compare follower lists over time
+- 📊 Compare followehr lists over time
 - 🔄 Identify new followers and unfollowers
 - 📈 Analyze follower data with detailed insights
 - 🎨 Beautiful, responsive UI with dark/light mode
@@ -132,21 +132,3 @@ src/
   - Historical follower data
   - Comparison results
   - Analytics data
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🔗 Links
-
-- [GitHub Repository](https://github.com/remcostoeten/Instagram-snitchr-find-out-who-unfollowed-you)
-- [Issue Tracker](https://github.com/remcostoeten/Instagram-snitchr-find-out-who-unfollowed-you/issues)
-
-## ✨ Acknowledgments
-
-- [Instagram Followers Exporter](https://chromewebstore.google.com/detail/instagram-volgers-exporte/ehbjlcniiagahknoclpikfjgnnggkoac) for current data generation
-- All contributors and users of this project 

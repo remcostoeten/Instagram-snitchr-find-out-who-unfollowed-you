@@ -9,9 +9,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  distDir: '.next',
-  dir: './src',
-  outputFileTracing: true,
 }
 
 export default nextConfig

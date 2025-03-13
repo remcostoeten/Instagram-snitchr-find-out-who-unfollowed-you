@@ -17,10 +17,10 @@ export function generateCsrfToken(): string {
 /**
  * Sets a CSRF token cookie
  */
-export function setCsrfCookie(): string {
+export async function setCsrfCookie(): Promise<string> {
   const token = generateCsrfToken()
 
-  cookies().set({
+  await (await cookies()).set({
     name: CSRF_COOKIE,
     value: token,
     httpOnly: true,
@@ -36,8 +36,8 @@ export function setCsrfCookie(): string {
 /**
  * Gets the CSRF token from cookies
  */
-export function getCsrfToken(): string | undefined {
-  return cookies().get(CSRF_COOKIE)?.value
+export async function getCsrfToken(): Promise<string | undefined> {
+  return (await cookies()).get(CSRF_COOKIE)?.value
 }
 
 /**

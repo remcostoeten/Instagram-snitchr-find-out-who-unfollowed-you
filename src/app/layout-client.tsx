@@ -1,19 +1,20 @@
 'use client'
 
 import { ThemeProvider } from "@/components/theme-provider"
-import { SonnerProvider } from "@/components/sonner-provider"
+import { Toaster } from "sonner"
+import { HeroPill } from "@/components/hero-pill"
 import { Inter } from "next/font/google"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
     return (
-        <body className={`${inter.className} antialiased min-h-screen bg-background font-sans`}>
+        <div className={`${inter.className} antialiased min-h-screen bg-background font-sans`}>
             <ThemeProvider
                 attribute="class"
-                defaultTheme="dark"
+                defaultTheme="system"
                 enableSystem
-                disableTransitionOnChange={false}
+                disableTransitionOnChange
             >
                 <style jsx global>{`
           :root {
@@ -26,9 +27,16 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
                       opacity var(--transition-duration) ease;
           }
         `}</style>
-                <SonnerProvider />
+                <HeroPill
+                    id="beta-announcement"
+                    href="#"
+                    label="Beta version - Still under active development, expect bugs"
+                    announcement="🚧 Beta"
+                    autoShowDelay={1000}
+                />
                 {children}
+                <Toaster />
             </ThemeProvider>
-        </body>
+        </div>
     )
 } 

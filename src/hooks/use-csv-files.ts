@@ -28,14 +28,22 @@ export function useCSVFiles() {
     setFiles(convertedFiles)
   }, [storeFiles])
 
-  const uploadFiles = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files || event.target.files.length === 0) return
+  const uploadFiles = (input: FileList | React.ChangeEvent<HTMLInputElement>) => {
+    let files: FileList;
 
-    setIsLoading(true)
-    setProgress(0)
+    if ('target' in input) {
+      if (!input.target.files || input.target.files.length === 0) return;
+      files = input.target.files;
+    } else {
+      if (input.length === 0) return;
+      files = input;
+    }
 
-    const filesArray = Array.from(event.target.files)
-    let processedFiles = 0
+    setIsLoading(true);
+    setProgress(0);
+
+    const filesArray = Array.from(files);
+    let processedFiles = 0;
 
     filesArray.forEach((file) => {
       Papa.parse(file, {
