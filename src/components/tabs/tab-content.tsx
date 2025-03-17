@@ -1,12 +1,12 @@
-import { Suspense, lazy } from 'react'
-import { TabsContent } from "@/components/ui/tabs"
+import { Suspense, lazy } from "react"
+import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
 
 const components = {
-    upload: lazy(() => import('@/components/tabs/upload-tab').then(mod => ({ default: mod.UploadTab }))),
-    files: lazy(() => import('@/components/tabs/files-tab').then(mod => ({ default: mod.FilesTab }))),
-    analyze: lazy(() => import('@/components/tabs/analyze-tab').then(mod => ({ default: mod.AnalyzeTab }))),
-    results: lazy(() => import('@/components/tabs/results-tab').then(mod => ({ default: mod.ResultsTab }))),
+    upload: lazy(() => import("@/components/tabs/upload-tab").then((mod) => ({ default: mod.UploadTab }))),
+    files: lazy(() => import("@/components/tabs/files-tab").then((mod) => ({ default: mod.FilesTab }))),
+    analyze: lazy(() => import("@/components/tabs/analyze-tab").then((mod) => ({ default: mod.AnalyzeTab }))),
+    results: lazy(() => import("@/components/tabs/results-tab").then((mod) => ({ default: mod.ResultsTab }))),
 }
 
 interface TabContentProps {
@@ -16,11 +16,11 @@ interface TabContentProps {
 
 function TabSkeleton() {
     return (
-        <div className="space-y-4">
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-8 w-3/4" />
-            <Skeleton className="h-8 w-1/2" />
+        <div className="space-y-6">
+            <Skeleton className="h-14 w-full rounded-xl" />
+            <Skeleton className="h-40 w-full rounded-xl" />
+            <Skeleton className="h-10 w-3/4 rounded-xl" />
+            <Skeleton className="h-10 w-1/2 rounded-xl" />
         </div>
     )
 }
@@ -29,10 +29,16 @@ export function TabContent({ value, props }: TabContentProps) {
     const Component = components[value as keyof typeof components]
 
     return (
-        <TabsContent value={value} className="space-y-4 border-clean p-4 bg-secondary rounded-lg">
-            <Suspense fallback={<TabSkeleton />}>
-                <Component {...props} />
-            </Suspense>
-        </TabsContent>
+        <Tabs>
+            <TabsContent
+                value={value}
+                className="space-y-6 p-6 md:p-8 bg-gradient-to-br from-zinc-900 to-black rounded-xl border border-zinc-800 shadow-xl"
+            >
+                <Suspense fallback={<TabSkeleton />}>
+                    <Component {...props} />
+                </Suspense>
+            </TabsContent>
+        </Tabs>
     )
-} 
+}
+

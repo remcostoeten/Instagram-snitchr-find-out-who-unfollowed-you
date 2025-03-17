@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 import type { ComparisonResult } from "@/types"
-import { exportToCSV } from "@/utils/csv-export"
+import { exportToCSV } from "@/modules/ig-csv/utils/csv-export"
 
 interface ComparisonResultsProps {
   comparisonResult: ComparisonResult

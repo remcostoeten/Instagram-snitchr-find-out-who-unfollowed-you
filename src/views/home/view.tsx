@@ -10,9 +10,8 @@ import DemoPasswordForm from "@/components/demo-password-form"
 import DemoDataLoader from "@/components/demo-data-loader"
 import { BannerWithIcon } from "@/components/landing/banner-with-icon"
 import { useAuth } from "@/modules/auth/hooks/use-auth"
-
-import { useCSVFiles } from "@/hooks/use-csv-files"
-import { useComparison } from "@/hooks/use-comparison"
+import { useComparison } from "@/modules/ig-csv/hooks/use-comparison"
+import { useCSVFiles } from "@/modules/ig-csv/hooks/use-csv-files"
 
 export function HomeView() {
     const [activeTab, setActiveTab] = useState<string>("upload")
@@ -26,8 +25,8 @@ export function HomeView() {
         useComparison(files)
 
     const handleToggleDarkMode = () => {
-        setIsDarkMode(prev => !prev)
-        localStorage.setItem('theme', isDarkMode ? 'light' : 'dark')
+        setIsDarkMode((prev) => !prev)
+        localStorage.setItem("theme", isDarkMode ? "light" : "dark")
     }
 
     const tabProps = {
@@ -71,17 +70,12 @@ export function HomeView() {
     }
 
     return (
-        <div className={`min-h-screen bg-background text-foreground flex flex-col ${isDarkMode ? "" : "light"}`}>
-            <Header
-                isDarkMode={isDarkMode}
-                onToggleDarkMode={handleToggleDarkMode}
-                user={user}
-                onSignOut={signOut}
-            />
+        <div className={`min-h-screen bg-black text-foreground flex flex-col ${isDarkMode ? "" : "light"}`}>
+            <Header isDarkMode={isDarkMode} onToggleDarkMode={handleToggleDarkMode} user={user} onSignOut={signOut} />
 
-            {/* Add padding-top to account for fixed header */}
-            <div className="pt-[3.5rem] flex-1">
-                <div className="mt-6">
+            {/* Main content with gradient background */}
+            <div className="pt-[4.5rem] flex-1 bg-gradient-to-b from-black via-black to-zinc-900">
+                <div className="mt-8 mb-10 px-4 md:px-8">
                     <BannerWithIcon
                         onViewDemo={() => {
                             setIsDemoPasswordModalOpen(true)
@@ -90,34 +84,28 @@ export function HomeView() {
                 </div>
                 <DemoDataLoader />
 
-                <main className="flex-1 container pb-6">
-                    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                        <TabsList className="grid w-full grid-cols-4 bg-secondary border border-border p-1 rounded-lg">
-                            <TabsTrigger
-                                value="upload"
-                                className="data-[state=active]:bg-accent data-[state=active]:text-primary data-[state=active]:shadow-none rounded-md"
-                            >
-                                Upload Files
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="files"
-                                className="data-[state=active]:bg-accent data-[state=active]:text-primary data-[state=active]:shadow-none rounded-md"
-                            >
-                                Manage Files
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="analyze"
-                                className="data-[state=active]:bg-accent data-[state=active]:text-primary data-[state=active]:shadow-none rounded-md"
-                            >
-                                Analyze File
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="results"
-                                className="data-[state=active]:bg-accent data-[state=active]:text-primary data-[state=active]:shadow-none rounded-md"
-                            >
-                                Compare Results
-                            </TabsTrigger>
-                        </TabsList>
+                <main className="flex-1 container max-w-6xl pb-16">
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+                        <div className="relative">
+                            {/* Glowing background effect */}
+                            <div className="absolute -inset-1 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-blue-600/20 rounded-xl blur-xl opacity-30"></div>
+
+                            <TabsList className="relative grid w-full grid-cols-4 bg-black/60 backdrop-blur-sm border border-zinc-800 p-1.5 rounded-xl overflow-hidden">
+                                {["upload", "files", "analyze", "results"].map((tab) => (
+                                    <TabsTrigger
+                                        key={tab}
+                                        value={tab}
+                                        className="data-[state=active]:bg-zinc-800 data-[state=active]:text-white data-[state=active]:shadow-none rounded-lg py-3 transition-all duration-200 capitalize"
+                                    >
+                                        {tab
+                                            .replace(/([A-Z])/g, " $1")
+                                            .split(" ")
+                                            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                                            .join(" ")}
+                                    </TabsTrigger>
+                                ))}
+                            </TabsList>
+                        </div>
 
                         {Object.keys(tabProps).map((tab) => (
                             <TabContent key={tab} value={tab} props={tabProps[tab as keyof typeof tabProps]} />
@@ -129,16 +117,19 @@ export function HomeView() {
             <Footer />
 
             <Dialog open={isDemoPasswordModalOpen} onOpenChange={setIsDemoPasswordModalOpen}>
-                <DialogContent className="bg-secondary border border-border sm:max-w-md">
+                <DialogContent className="bg-zinc-900 border border-zinc-800 sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Demo Access</DialogTitle>
                     </DialogHeader>
-                    <DemoPasswordForm onSuccess={() => {
-                        setIsDemoPasswordModalOpen(false)
-                        window.dispatchEvent(new CustomEvent('demoReady'))
-                    }} />
+                    <DemoPasswordForm
+                        onSuccess={() => {
+                            setIsDemoPasswordModalOpen(false)
+                            window.dispatchEvent(new CustomEvent("demoReady"))
+                        }}
+                    />
                 </DialogContent>
             </Dialog>
         </div>
     )
-} 
+}
+

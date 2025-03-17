@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { toast } from 'sonner'
-import { useCSVFiles } from '@/hooks/use-csv-files'
+import { useCSVFiles } from '@/modules/ig-csv/hooks/use-csv-files'
 
 export default function DemoDataLoader() {
     const { uploadFiles } = useCSVFiles()

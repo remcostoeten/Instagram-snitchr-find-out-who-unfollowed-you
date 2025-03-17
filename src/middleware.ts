@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { verifyToken } from "./modules/authentication/api/utils/jwt"
+import { verifyToken } from "./modules/auth/api/utils/jwt"
 
 // Paths that require authentication
 const PROTECTED_PATHS = ["/dashboard", "/profile", "/settings"]

@@ -1,40 +1,32 @@
-import { Github } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import Link from "next/link"
+import { Rocket } from "lucide-react"
 
 export function Footer() {
     return (
-        <footer className="border-t border-border/40 bg-background/80 backdrop-blur-sm py-6 mt-auto">
-            <div className="container flex flex-col items-center justify-center gap-4 md:flex-row md:justify-between text-sm">
-                <p className="text-muted-foreground">
-                    Built with ♥️ by{" "}
-                    <a
-                        href="https://github.com/remcostoeten"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-medium text-foreground hover:text-primary transition-colors"
-                    >
-                        Remco Stoeten
-                    </a>
-                </p>
-
-                <div className="flex items-center gap-4">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9"
-                        asChild
-                    >
-                        <a
-                            href="https://github.com/remcostoeten/instagram-csv-comparer"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label="View source on GitHub"
-                        >
-                            <Github className="h-5 w-5" />
-                        </a>
-                    </Button>
+        <footer className="border-t border-zinc-800 bg-black py-6 px-4 md:px-8">
+            <div className="container flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                    <div className="rounded-full bg-gradient-to-br from-purple-500 to-pink-600 p-1.5 shadow-lg shadow-purple-500/20">
+                        <Rocket className="h-4 w-4 text-white" />
+                    </div>
+                    <span className="text-sm text-zinc-400">
+                        © {new Date().getFullYear()} Instagram Snitch'r. All rights reserved.
+                    </span>
                 </div>
+
+                <nav className="flex items-center gap-6">
+                    <Link href="/terms" className="text-sm text-zinc-400 hover:text-white transition-colors">
+                        Terms
+                    </Link>
+                    <Link href="/privacy" className="text-sm text-zinc-400 hover:text-white transition-colors">
+                        Privacy
+                    </Link>
+                    <Link href="/contact" className="text-sm text-zinc-400 hover:text-white transition-colors">
+                        Contact
+                    </Link>
+                </nav>
             </div>
         </footer>
     )
-} 
+}
+

@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { login } from "@/modules/authentication/api/mutations/auth"
 import { Eye, EyeOff, LogIn, ArrowRight, AlertCircle } from "lucide-react"
+import { login } from "@/modules/auth/api/mutations/auth"
 
 export default function LoginPage() {
   const router = useRouter()
