@@ -28,29 +28,46 @@ export default function LoginPage() {
     fetchCsrfToken()
   }, [])
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(formData: FormData): Promise<void> {
     setIsLoading(true)
     setErrors({})
     setGeneralError(null)
 
-    // Add CSRF token to form data
-    formData.append("csrfToken", csrfToken)
-    // Add remember me to form data
-    formData.append("rememberMe", rememberMe.toString())
+    try {
+      const email = formData.get('email')
+      const password = formData.get('password')
 
-    const result = await login(formData)
+      if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
+        setGeneralError('Please provide both email and password')
+        setIsLoading(false)
+        return
+      }
 
-    setIsLoading(false)
+      const result = await login({
+        email,
+        password,
+        csrfToken,
+        rememberMe
+      })
 
-    if (result.success) {
-      // Redirect to return URL or dashboard on successful login
-      router.push(returnUrl)
-    } else {
-      if (result.fieldErrors) {
-        setErrors(result.fieldErrors)
+      setIsLoading(false)
+
+      if (result.success) {
+        router.push(returnUrl)
+      } else if (result.fieldErrors) {
+        const formattedErrors: Record<string, string> = {}
+        Object.entries(result.fieldErrors).forEach(([key, messages]) => {
+          if (messages && messages.length > 0) {
+            formattedErrors[key] = messages[0]
+          }
+        })
+        setErrors(formattedErrors)
       } else if (result.error) {
         setGeneralError(result.error)
       }
+    } catch (error) {
+      setIsLoading(false)
+      setGeneralError('An unexpected error occurred')
     }
   }
 

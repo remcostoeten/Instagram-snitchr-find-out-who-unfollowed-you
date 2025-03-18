@@ -1,15 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Plus, Edit, Trash2, X, Tag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { useGetLabels } from "@/modules/ig-csv/api/queries/labels"
-import { useGetFiles } from "@/modules/ig-csv/api/queries/files"
-import { useCreateLabel, useUpdateLabel, useDeleteLabel } from "@/modules/ig-csv/api/mutations/labels"
+import { createLabel as createLabelAction, updateLabel as updateLabelAction, deleteLabel as deleteLabelAction } from "@/modules/ig-csv/api/mutations/labels"
+import { getFiles } from "@/modules/ig-csv/api/queries/files"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog"
 import { toast } from "sonner"
+import { useAuth } from "@/modules/auth/hooks/use-auth"
 
 interface LabelManagerProps {
   onSelectLabel: (labelId: string | null) => void
@@ -17,11 +18,27 @@ interface LabelManagerProps {
 }
 
 export default function LabelManager({ onSelectLabel, selectedLabelId }: LabelManagerProps) {
+  const { user } = useAuth()
   const labels = useGetLabels()
-  const createLabel = useCreateLabel()
-  const updateLabel = useUpdateLabel()
-  const deleteLabel = useDeleteLabel()
-  const allFiles = useGetFiles()
+  const [files, setFiles] = useState<any[]>([])
+
+  useEffect(() => {
+    const fetchFiles = async () => {
+      if (!user) {
+        toast.error("Please sign in to manage labels")
+        return
+      }
+      const response = await getFiles()
+      if (response.success && response.data) {
+        setFiles(response.data)
+      }
+    }
+    fetchFiles()
+  }, [user])
+
+  const createLabel = createLabelAction
+  const updateLabel = updateLabelAction
+  const deleteLabel = deleteLabelAction
 
   const [newLabel, setNewLabel] = useState({ name: "", color: "#3b82f6" })
   const [editingLabel, setEditingLabel] = useState<{ id: string; name: string; color?: string } | null>(null)
@@ -77,11 +94,18 @@ export default function LabelManager({ onSelectLabel, selectedLabelId }: LabelMa
     }
   }
 
-  // First, get all files once
-  // Then compute the counts without using hooks in a loop
+  // Update file counting logic to use state
   const fileCounts = labels.map((label) => {
-    return allFiles.filter((file) => file.labels.includes(label.id)).length
+    return files.filter((file) => file.labels.includes(label.id)).length
   })
+
+  if (!user) {
+    return (
+      <div className="p-4 text-center">
+        <p>Please sign in to manage labels</p>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
@@ -153,7 +177,7 @@ export default function LabelManager({ onSelectLabel, selectedLabelId }: LabelMa
 
       <div className="flex flex-wrap gap-2">
         {labels.map((label) => {
-          const fileCount = allFiles.filter((file) => file.labels.includes(label.id)).length
+          const fileCount = files.filter((file) => file.labels.includes(label.id)).length
 
           return (
             <Badge

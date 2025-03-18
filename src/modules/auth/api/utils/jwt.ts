@@ -1,6 +1,10 @@
 import { SignJWT, jwtVerify } from "jose"
 import { cookies } from "next/headers"
 import { RequestCookies } from "next/dist/server/web/spec-extension/cookies"
+import { users } from "@/server/db/schema"
+import { sessions } from "@/server/db/schema"
+import { eq } from "drizzle-orm"
+import { db } from "@/server/db"
 
 // Secret key for JWT signing and verification
 // In production, use a secure environment variable
@@ -82,3 +86,16 @@ export async function getTokenFromCookies(): Promise<string | undefined> {
   return cookieStore.get(AUTH_COOKIE)?.value
 }
 
+export async function findSessionById(id: string) {
+  const session = await db.query.sessions.findFirst({
+    where: eq(sessions.id, id),
+  })
+  return session
+}
+
+export async function findUserById(id: string) {
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, id),
+  })
+  return user
+}

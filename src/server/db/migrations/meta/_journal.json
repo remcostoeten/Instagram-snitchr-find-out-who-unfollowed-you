@@ -1,0 +1,27 @@
+{
+  "version": "5",
+  "dialect": "pg",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1742256574483,
+      "tag": "0000_absurd_shinko_yamashiro",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1742257208740,
+      "tag": "0001_flat_typhoid_mary",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1742257668346,
+      "tag": "0002_smiling_skaar",
+      "breakpoints": true
+    }
+  ]
+}

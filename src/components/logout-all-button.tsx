@@ -1,32 +1,40 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { logoutAll } from "@/modules/authentication/api/mutations/auth"
+import { Button } from '@/components/ui/button'
+import { LogOut } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { logoutAll } from '@/modules/auth/api/mutations/auth'
 
 export default function LogoutAllButton() {
   const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
 
-  async function handleLogoutAll() {
-    setIsLoading(true)
-    const result = await logoutAll()
-    setIsLoading(false)
+  const handleLogoutAll = async () => {
+    try {
+      const result = await logoutAll()
 
-    if (result.success) {
-      router.push("/login")
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to logout from all devices')
+      }
+
+      toast.success('Logged out from all devices')
+      router.push('/login')
       router.refresh()
+    } catch (error) {
+      console.error('Error logging out from all devices:', error)
+      toast.error('Failed to logout from all devices')
     }
   }
 
   return (
-    <button
+    <Button
+      variant="destructive"
       onClick={handleLogoutAll}
-      disabled={isLoading}
-      className="rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:opacity-75"
+      className="w-full sm:w-auto"
     >
-      {isLoading ? "Logging out..." : "Logout from all devices"}
-    </button>
+      <LogOut className="w-4 h-4 mr-2" />
+      Logout All Devices
+    </Button>
   )
 }
 

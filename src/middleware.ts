@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { verifyToken } from "./modules/auth/api/utils/jwt"
+import { isAuthenticated } from '@/modules/auth/api/utils/auth-server'
 
 // Paths that require authentication
 const PROTECTED_PATHS = ["/dashboard", "/profile", "/settings"]
@@ -38,9 +39,13 @@ export async function middleware(request: NextRequest) {
 
   // User is not authenticated
   if (isProtectedPath) {
-    // Redirect to login page with return URL
-    const returnUrl = encodeURIComponent(pathname)
-    return NextResponse.redirect(new URL(`/login?returnUrl=${returnUrl}`, request.url))
+    const authenticated = await isAuthenticated()
+
+    if (!authenticated) {
+      const loginUrl = new URL('/login', request.url)
+      loginUrl.searchParams.set('from', request.nextUrl.pathname)
+      return NextResponse.redirect(loginUrl)
+    }
   }
 
   // Allow access to public paths
@@ -58,6 +63,9 @@ export const config = {
      * - api routes that don't require authentication
      */
     "/((?!_next/static|_next/image|favicon.ico|public|api/public).*)",
+    '/profile/:path*',
+    '/settings/:path*',
+    '/dashboard/:path*'
   ],
 }
 

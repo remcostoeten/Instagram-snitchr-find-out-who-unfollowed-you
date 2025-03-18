@@ -15,8 +15,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { useGetFolders } from "@/modules/ig-csv/api/queries/folders"
-import { useGetFiles } from "@/modules/ig-csv/api/queries/files" // Import useGetFiles
-import { useCreateFolder, useUpdateFolder, useDeleteFolder } from "@/modules/ig-csv/api/mutations/folders"
+import { createFolder as createFolderAction, updateFolder as updateFolderAction, deleteFolder as deleteFolderAction } from "@/modules/ig-csv/api/mutations/folders"
+import { getFiles } from "@/modules/ig-csv/api/queries/files"
 import { toast } from "sonner"
 
 interface FolderManagerProps {
@@ -26,10 +26,10 @@ interface FolderManagerProps {
 
 export default function FolderManager({ onSelectFolder, selectedFolderId }: FolderManagerProps) {
   const folders = useGetFolders()
-  const createFolder = useCreateFolder()
-  const updateFolder = useUpdateFolder()
-  const deleteFolder = useDeleteFolder()
-  const allFiles = useGetFiles() // Get all files
+  const createFolder = createFolderAction
+  const updateFolder = updateFolderAction
+  const deleteFolder = deleteFolderAction
+  const allFiles = getFiles()
 
   const [newFolderName, setNewFolderName] = useState("")
   const [editingFolder, setEditingFolder] = useState<{ id: string; name: string } | null>(null)

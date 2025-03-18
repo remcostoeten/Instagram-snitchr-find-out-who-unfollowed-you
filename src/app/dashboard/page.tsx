@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { getCurrentUser } from "@/modules/authentication/api/queries/auth"
+import { getCurrentUser } from "@/modules/auth/api/queries/auth"
 import LogoutButton from "@/components/logout-button"
 
 export default async function DashboardPage() {

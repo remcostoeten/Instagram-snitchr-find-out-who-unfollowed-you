@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@/modules/authentication/api/hooks/useAuth"
+import { useAuth } from "@/modules/authentication/api/hooks/use-auth"
 
 interface AuthGuardProps {
   children: React.ReactNode

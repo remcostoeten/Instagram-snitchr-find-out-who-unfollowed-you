@@ -1,32 +1,40 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { logout } from "@/modules/authentication/api/mutations/auth"
+import { Button } from '@/components/ui/button'
+import { LogOut } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { logout } from '@/modules/auth/api/mutations/auth'
 
 export default function LogoutButton() {
   const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
 
-  async function handleLogout() {
-    setIsLoading(true)
-    const result = await logout()
-    setIsLoading(false)
+  const handleLogout = async () => {
+    try {
+      const result = await logout()
 
-    if (result.success) {
-      router.push("/login")
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to logout')
+      }
+
+      toast.success('Logged out successfully')
+      router.push('/login')
       router.refresh()
+    } catch (error) {
+      console.error('Error logging out:', error)
+      toast.error('Failed to logout')
     }
   }
 
   return (
-    <button
+    <Button
+      variant="outline"
       onClick={handleLogout}
-      disabled={isLoading}
-      className="rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:opacity-75"
+      className="w-full sm:w-auto"
     >
-      {isLoading ? "Logging out..." : "Logout"}
-    </button>
+      <LogOut className="w-4 h-4 mr-2" />
+      Logout
+    </Button>
   )
 }
 

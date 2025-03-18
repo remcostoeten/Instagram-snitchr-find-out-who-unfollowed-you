@@ -1,8 +1,12 @@
 import type { Metadata } from "next"
-import "./globals.css"
+import { Toaster } from "sonner"
+import { inter, calSans } from "@/lib/fonts"
+import { Header } from "@/components/header"
+import { cn } from "@/lib/utils"
+import "@/styles/globals.css"
 import { siteConfig } from "@/core/config/site-config"
-import { ClientLayout } from "./layout-client"
-import { Toaster } from 'sonner'
+import { Providers } from "@/providers"
+import { HeroPill } from "@/components/hero-pill"
 
 export const metadata: Metadata = {
   title: siteConfig.name,
@@ -17,8 +21,23 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head />
-      <body>
-        <ClientLayout>{children}</ClientLayout>
+      <body className={cn(
+        "min-h-screen bg-background font-sans antialiased",
+        inter.variable,
+        calSans.variable
+      )}>
+        <Header />
+        <Providers>
+          <HeroPill
+            id="beta-announcement"
+            href="#"
+            label="Beta version - Still under active development, expect bugs"
+            announcement="🚧 Beta"
+            autoShowDelay={1000}
+          />
+          {children}
+        </Providers>
+        <Toaster />
       </body>
     </html>
   )

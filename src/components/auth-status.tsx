@@ -1,6 +1,6 @@
 "use client"
 
-import { useAuth } from "@/modules/authentication/api/hooks/useAuth"
+import { useAuth } from "@/modules/authentication/api/hooks/use-auth"
 import Link from "next/link"
 
 export default function AuthStatus() {

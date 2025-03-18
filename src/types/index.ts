@@ -15,6 +15,10 @@ export type FileData = {
   name: string
   data: UserData[]
   columns: string[]
+  folderId: string | null
+  labels: string[]
+  createdAt: Date
+  updatedAt: Date
 }
 
 // Comparison types

@@ -1,29 +1,38 @@
+'use server'
+
 import { db } from '@/server/db';
-import { users } from '@/server/db/schema';
+import { users, passwordResetTokens } from '@/server/db/schema';
 import { eq } from 'drizzle-orm';
-import { z } from 'zod';
-import { randomBytes } from 'crypto';
-import { hashPassword } from '../utils/password';
+import { v4 as uuidv4 } from 'uuid';
 import { addHours } from 'date-fns';
+import { hashPassword } from '../utils/password';
+import { validateCsrfToken } from '../utils/csrf';
+import { forgotPasswordSchema, resetPasswordSchema } from '../models/z.auth';
+import { RateLimiter } from '../utils/rate-limit';
 
-// Store reset tokens in memory (in production, use Redis or similar)
-const resetTokens = new Map<string, { userId: string; expiresAt: Date }>();
-
-const requestResetSchema = z.object({
-    email: z.string().email(),
+// Rate limiter for password reset attempts
+const passwordResetRateLimiter = new RateLimiter({
+    interval: 60 * 60 * 1000, // 1 hour
+    maxRequests: 3,
 });
 
-const resetPasswordSchema = z.object({
-    token: z.string(),
-    password: z.string().min(8),
-});
-
-export type RequestResetInput = z.infer<typeof requestResetSchema>;
-export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
-
-export async function requestPasswordReset(input: RequestResetInput) {
+export async function forgotPassword(input: { email: string, csrfToken: string }) {
     try {
-        const { email } = requestResetSchema.parse(input);
+        const { email, csrfToken } = forgotPasswordSchema.parse(input);
+
+        // Validate CSRF token
+        if (!await validateCsrfToken(csrfToken)) {
+            return { error: 'Invalid request' };
+        }
+
+        // Check rate limiting
+        const rateLimitResult = passwordResetRateLimiter.attempt(email);
+        if (!rateLimitResult.success) {
+            return {
+                error: `Too many reset attempts. Please try again after ${new Date(rateLimitResult.resetTime!).toLocaleString()}`,
+                resetTime: rateLimitResult.resetTime,
+            };
+        }
 
         const user = await db.query.users.findFirst({
             where: eq(users.email, email),
@@ -35,70 +44,60 @@ export async function requestPasswordReset(input: RequestResetInput) {
         }
 
         // Generate reset token
-        const token = randomBytes(32).toString('hex');
+        const token = uuidv4();
         const expiresAt = addHours(new Date(), 1); // Token expires in 1 hour
 
-        // Store token (in production, store in database or Redis)
-        resetTokens.set(token, {
+        // Save reset token
+        await db.insert(passwordResetTokens).values({
             userId: user.id,
+            token,
             expiresAt,
         });
 
         // TODO: Send password reset email
-        // In production, integrate with your email service
-        console.log(`Password reset token for ${email}: ${token}`);
-
-        return { success: true };
+        // For now, we'll just return the token (in production, this should be sent via email)
+        return { success: true, token };
     } catch (error) {
-        console.error('Password reset request error:', error);
-        if (error instanceof z.ZodError) {
-            return { fieldErrors: error.flatten().fieldErrors };
-        }
-        return { error: 'Failed to process password reset request' };
+        console.error('Password reset error:', error);
+        return { error: 'An error occurred while processing your request' };
     }
 }
 
-export async function resetPassword(input: ResetPasswordInput) {
+export async function resetPassword(input: { token: string, password: string, confirmPassword: string, csrfToken: string }) {
     try {
-        const { token, password } = resetPasswordSchema.parse(input);
+        const { token, password, csrfToken } = resetPasswordSchema.parse(input);
 
-        const resetInfo = resetTokens.get(token);
-        if (!resetInfo) {
+        // Validate CSRF token
+        if (!await validateCsrfToken(csrfToken)) {
+            return { error: 'Invalid request' };
+        }
+
+        // Find and validate reset token
+        const resetToken = await db.query.passwordResetTokens.findFirst({
+            where: eq(passwordResetTokens.token, token),
+        });
+
+        if (!resetToken || resetToken.used || resetToken.expiresAt < new Date()) {
             return { error: 'Invalid or expired reset token' };
         }
 
-        const now = new Date();
-        if (now > resetInfo.expiresAt) {
-            resetTokens.delete(token);
-            return { error: 'Reset token has expired' };
-        }
-
+        // Hash new password
         const hashedPassword = await hashPassword(password);
 
-        // Update password in database
-        await db.update(users)
-            .set({ password: hashedPassword })
-            .where(eq(users.id, resetInfo.userId));
+        // Update password and mark token as used
+        await db.transaction(async (tx) => {
+            await tx.update(users)
+                .set({ password: hashedPassword })
+                .where(eq(users.id, resetToken.userId));
 
-        // Remove used token
-        resetTokens.delete(token);
+            await tx.update(passwordResetTokens)
+                .set({ used: true })
+                .where(eq(passwordResetTokens.id, resetToken.id));
+        });
 
         return { success: true };
     } catch (error) {
         console.error('Password reset error:', error);
-        if (error instanceof z.ZodError) {
-            return { fieldErrors: error.flatten().fieldErrors };
-        }
-        return { error: 'Failed to reset password' };
+        return { error: 'An error occurred while resetting your password' };
     }
-}
-
-// Cleanup expired tokens periodically
-setInterval(() => {
-    const now = new Date();
-    for (const [token, info] of resetTokens.entries()) {
-        if (now > info.expiresAt) {
-            resetTokens.delete(token);
-        }
-    }
-}, 15 * 60 * 1000); // Clean up every 15 minutes 
+} 

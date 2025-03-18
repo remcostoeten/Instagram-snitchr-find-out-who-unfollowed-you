@@ -9,10 +9,9 @@ import FolderManager from "./folder-manager"
 import LabelManager from "./label-manager"
 import { useGetFolders } from "@/modules/ig-csv/api/queries/folders"
 import { useGetLabels } from "@/modules/ig-csv/api/queries/labels"
-import { useMoveFileToFolder } from "@/modules/ig-csv/api/mutations/files"
-import { useAddLabelToFile, useRemoveLabelFromFile } from "@/modules/ig-csv/api/mutations/files"
+import { moveFileToFolder, addLabelToFile, removeLabelFromFile, updateFile } from "@/modules/ig-csv/api/mutations/files"
 import type { FileData } from "@/types"
-import { useGetFiles } from "@/modules/ig-csv/api/queries/files"
+import { getFiles } from "@/modules/ig-csv/api/queries/files"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { Card } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -22,7 +21,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { format } from "date-fns"
 import { toast } from "sonner"
 import { DocumentTitle } from "./document-title"
-import { useRenameFile } from "@/modules/ig-csv/api/mutations/files"
 
 interface FileManagerProps {
   files: FileData[]
@@ -57,25 +55,21 @@ export default function FileManager({
 
   const folders = useGetFolders()
   const labels = useGetLabels()
-  const moveFileToFolder = useMoveFileToFolder()
-  const addLabelToFile = useAddLabelToFile()
-  const removeLabelFromFile = useRemoveLabelFromFile()
-  const renameFile = useRenameFile()
+  const moveToFolder = moveFileToFolder
+  const addLabel = addLabelToFile
+  const removeLabel = removeLabelFromFile
+  const rename = updateFile
 
-  // Get the actual file objects from the store to access metadata
-  const storeFiles = useGetFiles()
+  const storeFiles = files
 
-  // Filter files based on selected folder and label
   const filteredFiles = files.filter((file) => {
     const storeFile = storeFiles.find((sf) => sf.id === file.id)
     if (!storeFile) return false
 
-    // Filter by folder
     if (selectedFolderId && storeFile.folderId !== selectedFolderId) {
       return false
     }
 
-    // Filter by label
     if (selectedLabelId && !storeFile.labels.includes(selectedLabelId)) {
       return false
     }
@@ -85,7 +79,7 @@ export default function FileManager({
 
   const handleMoveToFolder = (folderId: string | null) => {
     if (fileForFolderMove) {
-      moveFileToFolder(fileForFolderMove, folderId)
+      moveToFolder(fileForFolderMove, folderId)
 
       // Get file and folder names for the toast
       const fileName = storeFiles.find(f => f.id === fileForFolderMove)?.name || "File"
@@ -113,12 +107,12 @@ export default function FileManager({
     const labelName = labels.find(l => l.id === labelId)?.name || "label"
 
     if (storeFile.labels.includes(labelId)) {
-      removeLabelFromFile(fileForLabelManagement, labelId)
+      removeLabel(fileForLabelManagement, labelId)
       toast.info("Label removed", {
         description: `"${labelName}" has been removed from "${fileName}"`
       })
     } else {
-      addLabelToFile(fileForLabelManagement, labelId)
+      addLabel(fileForLabelManagement, labelId)
       toast.success("Label added", {
         description: `"${labelName}" has been added to "${fileName}"`
       })
@@ -303,7 +297,7 @@ export default function FileManager({
                       <div className="min-w-0 flex-1">
                         <DocumentTitle
                           initialTitle={file.name}
-                          onTitleChange={(newName) => renameFile(file.id, newName)}
+                          onTitleChange={(newName) => rename(file.id, newName)}
                         />
                       </div>
                     </div>

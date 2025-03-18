@@ -1,41 +1,54 @@
 "use server"
 
+import { cookies } from 'next/headers'
+import { jwtVerify } from 'jose'
+import { db } from '@/server/db'
+import { users } from '@/server/db/schema'
+import { eq } from 'drizzle-orm'
 import { getTokenFromCookies, verifyToken } from "../utils/jwt"
 import { findUserById } from "../store/users"
-import { findSessionById } from "../store/sessions"
+import { getSession } from "../utils/session"
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key'
 
 /**
  * Gets the current authenticated user
  */
 export async function getCurrentUser() {
   try {
-    // Get token from cookies
-    const token = getTokenFromCookies()
-    if (!token) return null
+    const cookieStore = await cookies()
+    const token = cookieStore.get('token')?.value
 
-    // Verify token
-    const payload = await verifyToken(token)
-    if (!payload) return null
-
-    // Check if session exists and is valid
-    const session = await findSessionById(payload.sessionId)
-    if (!session) return null
-
-    // Check if session is expired
-    if (session.expiresAt < new Date()) return null
-
-    // Get user
-    const user = await findUserById(payload.sub)
-    if (!user) return null
-
-    // Return user info (excluding sensitive data)
-    return {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      sessionId: session.id,
+    if (!token) {
+      return null
     }
+
+    // Verify the JWT token
+    const { payload } = await jwtVerify(
+      token,
+      new TextEncoder().encode(JWT_SECRET)
+    )
+
+    if (!payload.sub) {
+      return null
+    }
+
+    // Get user from database
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, payload.sub as string),
+      columns: {
+        id: true,
+        email: true,
+        name: true,
+        instagramHandle: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    })
+
+    return user
   } catch (error) {
+    console.error('Error getting current user:', error)
     return null
   }
 }

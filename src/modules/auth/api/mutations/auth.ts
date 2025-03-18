@@ -1,20 +1,18 @@
 "use server"
 import { z } from "zod"
-import { headers } from "next/headers"
-import { registerInputSchema, loginInputSchema } from "../models/schema"
-import { hashPassword, comparePassword, verifyPassword } from "../utils/password"
-import { createUser, findUserByEmail } from "../store/users"
-import { createSession, deleteSession, deleteUserSessions } from "../store/sessions"
-import { createToken, setTokenCookie, removeTokenCookie, setAuthCookie, verifyToken } from "../utils/jwt"
-import { getCurrentUser } from "../queries/auth"
+import { hashPassword, verifyPassword } from "../utils/password"
+import { createToken, setTokenCookie, removeTokenCookie, verifyToken } from "../utils/jwt"
 import { validateCsrfToken } from "../utils/csrf"
-import { rateLimitLogin, resetLoginAttempts } from "../utils/rate-limit"
 import { db } from '@/server/db'
-import { users } from '@/server/db/schema'
+import { users, sessions } from '@/server/db/schema'
 import { eq } from 'drizzle-orm'
 import { cookies } from "next/headers"
 import { RequestCookies } from 'next/dist/server/web/spec-extension/cookies'
 import { RateLimiter } from '../utils/rate-limit'
+import { createSession, deleteSession, deleteUserSessions } from "../utils/session"
+import { getCurrentUser } from '../queries/auth'
+import { revalidatePath } from 'next/cache'
+import { ResponseCookies } from 'next/dist/compiled/@edge-runtime/cookies'
 
 // Create rate limiters
 const loginRateLimiter = new RateLimiter({
@@ -192,20 +190,24 @@ export async function login(input: LoginInput) {
  */
 export async function logout() {
   try {
-    const cookieStore = cookies() as RequestCookies
-    const cookieToken = cookieStore.get('auth_token')?.value
-    if (cookieToken) {
-      const payload = await verifyToken(cookieToken)
-      if (payload?.sessionId) {
-        await deleteSession(payload.sessionId)
-      }
-    }
+    // Clear the auth token cookie
+    const cookieStore = await cookies()
+    cookieStore.set('token', '', {
+      expires: new Date(0),
+      path: '/'
+    })
+    revalidatePath('/')
 
-    removeTokenCookie()
-    return { success: true }
+    return {
+      success: true,
+      error: null as string | null
+    }
   } catch (error) {
-    console.error('Logout error:', error)
-    return { error: 'An error occurred during logout' }
+    console.error('Error during logout:', error)
+    return {
+      success: false,
+      error: 'Failed to logout'
+    }
   }
 }
 
@@ -214,20 +216,36 @@ export async function logout() {
  */
 export async function logoutAll() {
   try {
-    const cookieStore = cookies() as RequestCookies
-    const cookieToken = cookieStore.get('auth_token')?.value
-    if (cookieToken) {
-      const payload = await verifyToken(cookieToken)
-      if (payload?.sub) {
-        await deleteUserSessions(payload.sub)
+    const user = await getCurrentUser()
+
+    if (!user) {
+      return {
+        success: false,
+        error: 'Unauthorized'
       }
     }
 
-    removeTokenCookie()
-    return { success: true }
+    // Delete all sessions for the user
+    await db.delete(sessions).where(eq(sessions.userId, user.id))
+
+    // Clear the auth token cookie
+    const cookieStore = await cookies()
+    cookieStore.set('token', '', {
+      expires: new Date(0),
+      path: '/'
+    })
+    revalidatePath('/')
+
+    return {
+      success: true,
+      error: null as string | null
+    }
   } catch (error) {
-    console.error('Logout error:', error)
-    return { error: 'An error occurred during logout' }
+    console.error('Error during logout from all devices:', error)
+    return {
+      success: false,
+      error: 'Failed to logout from all devices'
+    }
   }
 }
 

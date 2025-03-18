@@ -85,7 +85,7 @@ export function HomeView() {
                 <DemoDataLoader />
 
                 <main className="flex-1 container max-w-6xl pb-16">
-                    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+                    <Tabs defaultValue="upload" value={activeTab} onValueChange={setActiveTab} className="space-y-8">
                         <div className="relative">
                             {/* Glowing background effect */}
                             <div className="absolute -inset-1 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-blue-600/20 rounded-xl blur-xl opacity-30"></div>
@@ -95,6 +95,7 @@ export function HomeView() {
                                     <TabsTrigger
                                         key={tab}
                                         value={tab}
+                                        disabled={tab === "analyze" && !files.length || tab === "results" && !comparisonResult}
                                         className="data-[state=active]:bg-zinc-800 data-[state=active]:text-white data-[state=active]:shadow-none rounded-lg py-3 transition-all duration-200 capitalize"
                                     >
                                         {tab
@@ -107,8 +108,12 @@ export function HomeView() {
                             </TabsList>
                         </div>
 
-                        {Object.keys(tabProps).map((tab) => (
-                            <TabContent key={tab} value={tab} props={tabProps[tab as keyof typeof tabProps]} />
+                        {Object.entries(tabProps).map(([tab, props]) => (
+                            <TabContent
+                                key={tab}
+                                value={tab}
+                                props={props}
+                            />
                         ))}
                     </Tabs>
                 </main>
@@ -116,19 +121,16 @@ export function HomeView() {
 
             <Footer />
 
-            <Dialog open={isDemoPasswordModalOpen} onOpenChange={setIsDemoPasswordModalOpen}>
-                <DialogContent className="bg-zinc-900 border border-zinc-800 sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Demo Access</DialogTitle>
-                    </DialogHeader>
-                    <DemoPasswordForm
-                        onSuccess={() => {
-                            setIsDemoPasswordModalOpen(false)
-                            window.dispatchEvent(new CustomEvent("demoReady"))
-                        }}
-                    />
-                </DialogContent>
-            </Dialog>
+            {isDemoPasswordModalOpen && (
+                <Dialog open={isDemoPasswordModalOpen} onOpenChange={setIsDemoPasswordModalOpen}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Enter Demo Password</DialogTitle>
+                        </DialogHeader>
+                        <DemoPasswordForm onSuccess={() => setIsDemoPasswordModalOpen(false)} />
+                    </DialogContent>
+                </Dialog>
+            )}
         </div>
     )
 }

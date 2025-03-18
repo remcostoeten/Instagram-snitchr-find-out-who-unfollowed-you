@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { logout, logoutAll } from "../mutations/auth"
 
-interface UseAuthOptions {
+type UseAuthOptions = {
   redirectTo?: string
   redirectIfFound?: boolean
 }

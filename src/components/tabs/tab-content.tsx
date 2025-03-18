@@ -28,17 +28,19 @@ function TabSkeleton() {
 export function TabContent({ value, props }: TabContentProps) {
     const Component = components[value as keyof typeof components]
 
+    if (!Component) {
+        return null
+    }
+
     return (
-        <Tabs>
-            <TabsContent
-                value={value}
-                className="space-y-6 p-6 md:p-8 bg-gradient-to-br from-zinc-900 to-black rounded-xl border border-zinc-800 shadow-xl"
-            >
-                <Suspense fallback={<TabSkeleton />}>
-                    <Component {...props} />
-                </Suspense>
-            </TabsContent>
-        </Tabs>
+        <TabsContent
+            value={value}
+            className="space-y-6 p-6 md:p-8 bg-gradient-to-br from-zinc-900 to-black rounded-xl border border-zinc-800 shadow-xl"
+        >
+            <Suspense fallback={<TabSkeleton />}>
+                <Component {...props} />
+            </Suspense>
+        </TabsContent>
     )
 }
 
